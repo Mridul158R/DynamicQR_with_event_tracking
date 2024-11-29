@@ -9,6 +9,36 @@ const JWT_SECRET=process.env.JWT_SECRET;
 
 
 //ROUTE1:create user using POST "/api/auth/createUser" No login required
+/**
+ * @swagger
+ * /api/auth/createUser:
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 example: john.doe@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: User created successfully
+ *       400:
+ *         description: Validation error or user already exists
+ *       500:
+ *         description: Internal server error
+ */
 
 router.post('/createUser',[
     body('name','Enter valid Name').isLength({min:3}),

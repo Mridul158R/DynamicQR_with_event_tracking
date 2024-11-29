@@ -72,7 +72,7 @@ router.post("/QRCode",fetchuser, async (req, res) => {
         res.send(url); // Return existing URL
       } else {
         // Generate short URL
-        const shortUrl = `${base}/nav/${ID}`;
+        const shortUrl = `${base}/qr/nav/${ID}`;
         // Generate QR code
         const QrCode = await qrcode.toDataURL(shortUrl);
 

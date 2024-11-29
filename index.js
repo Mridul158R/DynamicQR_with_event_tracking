@@ -13,12 +13,16 @@ app.use(express.json())
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const fetchuser = require('./middleware/fetchuser');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger-output.json');
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 
 
 
-app.use('/api/auth',require('./routes/auth'));
-app.use('',require('./routes/qr'));
+app.use('/auth',require('./routes/auth'));
+app.use('/qr',require('./routes/qr'));
 
 // app.post('/qr/static', async (req, res) => {
 //   const { url, metadata } = req.body;
