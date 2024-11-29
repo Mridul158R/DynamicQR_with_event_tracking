@@ -14,7 +14,9 @@ router.get("/nav/:urlid", async (req, res) => {
     if (url){
       const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress; // Client's IP address
       const userAgent = req.headers["user-agent"]; // User-Agent string
-      const deviceType = useragent.parse(userAgent).platform; // Extract device type
+      const deviceType = useragent.parse(userAgent).platform;
+      console.log(ip);
+      
       const geo = geoip.lookup(ip); // Fetch location data
 
       const eventDetails = { 
@@ -130,7 +132,7 @@ router.post("/:urlid/update",fetchuser, async (req, res) => {
 });
 
 
-router.get("/qr/my-codes", fetchuser, async (req, res) => {
+router.get("/my-codes", fetchuser, async (req, res) => {
   const userId = req.user.id; 
   
   try {
@@ -141,6 +143,71 @@ router.get("/qr/my-codes", fetchuser, async (req, res) => {
     } else {
       res.status(404).json("No QR codes found for this user.");
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json("Server Error");
+  }
+});
+
+// Analytics API
+router.get("/:id/analytics", fetchuser, async (req, res) => {
+  const qrId = req.params.id;
+  const { startDate, endDate } = req.body; // Optional date range filters
+  console.log(startDate);
+  console.log(endDate);
+
+  try {
+    const qrCode = await db.findOne({ ID: qrId, user: req.user.id });
+
+    if (!qrCode) {
+      return res.status(404).json("QR Code not found");
+    }
+
+    // Filter events by date range if provided
+    let filteredEvents = qrCode.Events || []; // Ensure Events is an array
+    if (startDate || endDate) {
+      const start = startDate ? new Date(startDate) : new Date(0); // Default to epoch start
+      const end = endDate ? new Date(endDate) : new Date(); // Default to current date
+      filteredEvents = filteredEvents.filter(event => {
+        const eventTime = new Date(event.timestamp);
+        return eventTime >= start && eventTime <= end;
+      });
+    }
+
+    // Aggregate analytics
+    const totalScans = filteredEvents.length;
+    const uniqueUsers = new Set(
+      filteredEvents.map(event => event.deviceType + event.location)
+    ).size;
+
+    // Time-based trends
+    const scansPerDay = filteredEvents.reduce((acc, event) => {
+      const date = new Date(event.timestamp).toISOString().split("T")[0];
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {}); // Provide an initial empty object
+
+    // Geographic distribution
+    const geoDistribution = filteredEvents.reduce((acc, event) => {
+      const location = event.location || "Unknown";
+      acc[location] = (acc[location] || 0) + 1;
+      return acc;
+    }, {}); // Provide an initial empty object
+
+    // Device/platform analysis
+    const deviceAnalysis = filteredEvents.reduce((acc, event) => {
+      const device = event.deviceType || "Unknown";
+      acc[device] = (acc[device] || 0) + 1;
+      return acc;
+    }, {}); // Provide an initial empty object
+
+    res.json({
+      totalScans,
+      uniqueUsers,
+      scansPerDay,
+      geoDistribution,
+      deviceAnalysis,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json("Server Error");

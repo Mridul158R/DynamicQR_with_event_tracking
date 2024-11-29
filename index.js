@@ -10,7 +10,6 @@ app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(cors())
 app.use(express.json())
-const QRCodeModel = require("./models/QRCode");
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const fetchuser = require('./middleware/fetchuser');
@@ -19,7 +18,6 @@ const fetchuser = require('./middleware/fetchuser');
 
 
 app.use('/api/auth',require('./routes/auth'));
-app.use('/api/events',require('./routes/events'));
 app.use('',require('./routes/qr'));
 
 // app.post('/qr/static', async (req, res) => {
